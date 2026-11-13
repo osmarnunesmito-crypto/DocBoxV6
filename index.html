@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DocBox – Gestor de Documentos</title>
+<style>
+:root{--b1:#0A2A66;--b2:#1E6FFF;--b3:#5BB4FF;--grad:linear-gradient(135deg,#0A2A66,#1E6FFF 60%,#5BB4FF);--bg:#EEF4FF;--card:#fff;--txt:#10264d;--mut:#5b6b8c}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);padding-bottom:84px}
+header{background:var(--grad);color:#fff;padding:18px 16px 28px;border-radius:0 0 24px 24px;box-shadow:0 6px 20px #1e6fff55}
+header h1{font-size:22px}header p{font-size:13px;opacity:.85;margin-top:2px}
+main{max-width:900px;margin:-14px auto 0;padding:0 14px}
+.screen{display:none}.screen.on{display:block}
+.card{background:var(--card);border-radius:16px;padding:14px;margin-top:14px;box-shadow:0 4px 14px #0a2a6614}
+h3{font-size:16px;margin-bottom:8px}
+.btn{border:0;border-radius:12px;padding:11px 16px;font-size:14px;font-weight:600;color:#fff;background:var(--grad);cursor:pointer;box-shadow:0 3px 10px #1e6fff44;font-family:inherit}
+.btn.sec{background:#fff;color:var(--b2);border:1.5px solid var(--b2);box-shadow:none}
+.btn.red{background:linear-gradient(135deg,#991b1b,#ef4444)}
+.btn.green{background:linear-gradient(135deg,#065f46,#22c55e)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr)}}
+.kpi{background:var(--grad);color:#fff;border-radius:16px;padding:14px;box-shadow:0 4px 14px #1e6fff44}
+.kpi b{display:block;font-size:28px}.kpi span{font-size:12px;opacity:.95}
+.kpi.ok{background:linear-gradient(135deg,#065f46,#22c55e)}
+.kpi.warn{background:linear-gradient(135deg,#b45309,#fbbf24)}
+.kpi.bad{background:linear-gradient(135deg,#991b1b,#f87171)}
+input,select,textarea{width:100%;padding:11px;border:1.5px solid #cfe0ff;border-radius:10px;font-size:15px;background:#fff;color:var(--txt);font-family:inherit}
+label{display:block;font-size:12px;font-weight:600;color:var(--mut);margin:10px 0 4px}
+.tabs{display:flex;gap:6px;margin-top:14px;overflow-x:auto}
+.tab{flex:1;white-space:nowrap;padding:9px 12px;border-radius:12px;border:1.5px solid #cfe0ff;background:#fff;color:var(--b2);font-weight:600;font-size:13px;cursor:pointer}
+.tab.on{background:var(--grad);color:#fff;border-color:transparent}
+.doc{display:flex;gap:12px;align-items:center}
+.doc .ic{font-size:26px;width:46px;height:46px;border-radius:12px;background:#e3eeff;display:grid;place-items:center;flex:none}
+.doc .inf{flex:1;min-width:0}
+.doc .inf b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc .inf small{color:var(--mut);font-size:12px;display:block}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-top:3px}
+.badge.ok{background:#dcfce7;color:#166534}.badge.warn{background:#fef3c7;color:#92400e}.badge.bad{background:#fee2e2;color:#991b1b}
+.acts{display:flex;gap:4px;flex:none}
+.acts button{border:0;background:#eef4ff;border-radius:10px;width:36px;height:36px;font-size:16px;cursor:pointer}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px #0a2a6622;z-index:20}
+nav button{flex:1;border:0;background:none;font-size:10px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;cursor:pointer;font-family:inherit}
+nav button span{font-size:20px}nav button.on{color:var(--b2);font-weight:700}
+.modal{position:fixed;inset:0;background:#0a1e4a99;display:none;align-items:flex-end;justify-content:center;z-index:50}
+.modal.on{display:flex}
+.box{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:18px}
+@media(min-width:700px){.modal{align-items:center}.box{border-radius:22px}}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#0a2a66;color:#fff;padding:11px 18px;border-radius:24px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:99;max-width:90%;text-align:center}
+#toast.on{opacity:1}
+.alerta{padding:11px 14px;border-radius:12px;margin-top:12px;font-size:14px;font-weight:600;cursor:pointer}
+.alerta.bad{background:#fee2e2;color:#991b1b}.alerta.warn{background:#fef3c7;color:#92400e}
+.vazio{text-align:center;color:var(--mut);padding:24px 10px;font-size:14px}
+.bar{height:10px;border-radius:6px;background:var(--grad)}
+.menu{position:relative;display:inline-block}
+.menu .lista{display:none;position:absolute;top:110%;left:0;background:#fff;border-radius:12px;box-shadow:0 8px 24px #0a2a6633;min-width:240px;z-index:30;overflow:hidden}
+.menu.on .lista{display:block}
+.menu .lista button{display:block;width:100%;text-align:left;border:0;background:#fff;padding:13px 14px;font-size:14px;cursor:pointer;font-family:inherit}
+.menu .lista button:hover{background:#eef4ff}
+.drop{border:2px dashed var(--b3);border-radius:14px;padding:16px;text-align:center;color:var(--b2);font-weight:600;background:#f3f8ff;font-size:14px}
+.drop.on{background:#dbe9ff;border-color:var(--b2)}
+.sel{display:flex;gap:10px;align-items:center;padding:9px 6px;border-bottom:1px solid #e3eeff;font-size:14px;margin:0;color:var(--txt);font-weight:400}
+.sel input{width:20px;height:20px;flex:none;padding:0}
+.sel small{display:block;color:var(--mut);font-size:12px}
+.hist{position:relative;font-size:13px;padding:8px 44px 8px 0;border-bottom:1px solid #e3eeff}
+.hist .del{position:absolute;right:0;top:8px;border:0;background:#fee2e2;color:#991b1b;border-radius:8px;width:32px;height:32px;font-size:15px;cursor:pointer;font-family:inherit}
+.hist .del:hover{background:#fecaca}
+.info-envio{background:#e3eeff;border-radius:10px;padding:10px;font-size:13px;color:var(--b1);margin-bottom:8px;line-height:1.4}
+.passo{background:#f3f8ff;border-radius:12px;padding:12px;margin-top:10px;border-left:4px solid var(--b2)}
+.passo b{display:block;font-size:14px;color:var(--b1);margin-bottom:6px}
+.passo .arquivos{font-size:12px;color:var(--mut);margin-bottom:8px;line-height:1.5}
+#cam-video{background:#000;width:100%;height:100%;object-fit:cover;display:block}
+.scan-thumb{display:flex;gap:10px;align-items:flex-start;padding:10px;background:#f3f8ff;border-radius:12px;margin-top:8px}
+.scan-thumb img{width:64px;height:84px;object-fit:cover;border-radius:6px;flex:none}
+.scan-thumb .acts{display:flex;flex-direction:column;gap:4px;flex:none}
+.scan-thumb .acts button{border:0;background:#fff;border-radius:8px;width:34px;height:34px;font-size:15px;cursor:pointer;box-shadow:0 2px 6px #0a2a6622}
+.scan-thumb .acts button:disabled{opacity:.35;cursor:default}
+.filter-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-top:4px}
+.filter-row button{white-space:nowrap;padding:6px 10px;border-radius:20px;border:1.5px solid #cfe0ff;background:#fff;font-size:11px;font-weight:600;color:var(--b2);cursor:pointer;font-family:inherit}
+.filter-row button.on{background:var(--grad);color:#fff;border-color:transparent}
+#m-cam .box{padding:0;background:#000;max-width:100%;border-radius:0}
+@media(min-width:700px){#m-cam .box{border-radius:22px;max-width:640px}}
+#q-painel{display:none;background:#f3f8ff;border-radius:12px;padding:12px;margin-top:8px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💙 DocBox</h1>
+  <p>Seus documentos pessoais e da empresa, organizados</p>
+</header>
+
+<main>
+
+<section class="screen on" id="s-inicio">
+  <div id="alertas"></div>
+  <div class="grid" style="margin-top:14px" id="kpis"></div>
+  <div class="card"><h3>📊 Pessoais x Empresa</h3>
+    <div class="row" style="justify-content:space-around">
+      <svg id="rosca" width="130" height="130" viewBox="0 0 100 100"></svg>
+      <div id="legrosca"></div>
+    </div>
+  </div>
+  <div class="card"><h3>📄 Documentos por tipo</h3><div id="barras"></div></div>
+  <div class="card"><h3>⏰ Próximos vencimentos</h3><div id="proximos"></div></div>
+  <div class="row" style="margin-top:14px">
+    <button class="btn" onclick="abrirFormDoc()">➕ Novo documento</button>
+    <button class="btn sec" onclick="irPara('scan')">📷 Escanear</button>
+  </div>
+</section>
+
+<section class="screen" id="s-docs">
+  <div class="tabs" id="tabcat">
+    <button class="tab on" data-c="Todos">Todos (<i>0</i>)</button>
+    <button class="tab" data-c="Pessoal">👤 Pessoais (<i>0</i>)</button>
+    <button class="tab" data-c="Empresa">🏢 Empresa (<i>0</i>)</button>
+  </div>
+  <div class="card">
+    <input id="busca" placeholder="🔍 Buscar por nome, titular ou tipo" oninput="renderDocs()">
+    <div class="row" style="margin-top:8px">
+      <select id="f-ftipo" style="flex:1" onchange="renderDocs()"></select>
+      <select id="f-fstatus" style="flex:1" onchange="renderDocs()">
+        <option value="">Todos os status</option>
+        <option value="ok">🟢 Válidos</option>
+        <option value="warn">🟡 A vencer</option>
+        <option value="bad">🔴 Vencidos</option>
+      </select>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" onclick="abrirFormDoc()">➕ Novo documento</button>
+      <button class="btn red" onclick="excluirVencidos()">🗑️ Excluir vencidos</button>
+    </div>
+  </div>
+  <div class="card">
+    <div id="dropzone" class="drop">📂 Arraste arquivos aqui ou use os botões</div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" onclick="buscarComputador()">💻 Buscar no computador/drive</button>
+      <button class="btn sec" onclick="$('in-gal').click()">🖼️ Galeria</button>
+      <button class="btn sec" onclick="baixarICS()">📅 Vencimentos → agenda</button>
+    </div>
+    <input type="file" id="in-arq" multiple hidden accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,image/*">
+    <input type="file" id="in-gal" multiple hidden accept="image/*">
+  </div>
+  <div id="listadocs"></div>
+</section>
+
+<section class="screen" id="s-cad">
+  <div class="card">
+    <div class="menu" id="menucad">
+      <button class="btn" onclick="this.parentNode.classList.toggle('on')">➕ Cadastros ▾</button>
+      <div class="lista">
+        <button onclick="abrirEmpresa()">🏢 Cadastrar Empresa</button>
+        <button onclick="abrirPessoa()">👤 Cadastrar Pessoa Física</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="c-empresa" style="display:none">
+    <h3>🏢 Cadastrar Empresa</h3>
+    <input type="hidden" id="e-id">
+    <label>Razão social *</label><input id="e-razao">
+    <label>CNPJ</label><input id="e-cnpj" inputmode="numeric" placeholder="00.000.000/0000-00">
+    <label>E-mail</label><input id="e-email" type="email">
+    <label>Telefone / WhatsApp</label><input id="e-tel" inputmode="tel" placeholder="(92) 99999-9999">
+    <div class="row" style="margin-top:14px">
+      <button class="btn" onclick="salvarEmpresa()">💾 Salvar</button>
+      <button class="btn sec" onclick="fecharCad()">Cancelar</button>
+    </div>
+  </div>
+  <div class="card" id="c-pessoa" style="display:none">
+    <h3>👤 Cadastrar Pessoa Física</h3>
+    <input type="hidden" id="p-id">
+    <label>Nome completo *</label><input id="p-nome">
+    <label>CPF</label><input id="p-cpf" inputmode="numeric" placeholder="000.000.000-00">
+    <label>E-mail</label><input id="p-email" type="email">
+    <label>WhatsApp</label><input id="p-wpp" inputmode="tel" placeholder="(92) 99999-9999">
+    <div class="row" style="margin-top:14px">
+      <button class="btn" onclick="salvarPessoa()">💾 Salvar</button>
+      <button class="btn sec" onclick="fecharCad()">Cancelar</button>
+    </div>
+  </div>
+  <div class="card"><h3>🏢 Empresas</h3><div id="listaempresas"></div></div>
+  <div class="card"><h3>👤 Pessoas físicas</h3><div id="listapessoas"></div></div>
+</section>
+
+<section class="screen" id="s-enviar">
+  <div class="card">
+    <h3>📄 1. Escolha os documentos</h3>
+    <input id="s-busca" placeholder="🔍 Filtrar documentos" oninput="renderEnviar()">
+    <div id="s-lista" style="margin-top:8px"></div>
+    <small id="s-cont" style="color:var(--mut)"></small>
+  </div>
+  <div class="card">
+    <h3>👤 2. Quem vai receber</h3>
+    <select id="s-salvos" onchange="usarSalvo()"><option value="">⭐ Destinatários salvos</option></select>
+    <label>Nome</label><input id="s-nome" placeholder="Nome do destinatário">
+    <label>📧 E-mail</label><input id="s-email" type="email" inputmode="email" placeholder="email@exemplo.com">
+    <label>💬 WhatsApp</label><input id="s-wpp" inputmode="tel" placeholder="(92) 99999-9999">
+    <div class="row" style="margin-top:10px">
+      <button class="btn sec" onclick="escolherAgenda()">📇 Escolher da agenda</button>
+      <button class="btn sec" onclick="excluirSalvo()">🗑️ Remover salvo</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>✉️ 3. Mensagem e envio</h3>
+    <textarea id="s-msg" rows="3">Olá! Segue(m) o(s) documento(s) solicitado(s).</textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn green" id="btn-wpp" onclick="enviar('wpp')">💬 Enviar por WhatsApp</button>
+      <button class="btn" id="btn-email" onclick="enviar('email')">📧 Enviar por E-mail</button>
+      <button class="btn sec" onclick="baixarSelecionados()">⬇️ Baixar selecionados</button>
+    </div>
+  </div>
+  <div class="card"><h3>🕓 Histórico de envios</h3><div id="s-hist"></div></div>
+</section>
+
+<section class="screen" id="s-scan">
+  <div class="card">
+    <h3>📷 Escanear documento</h3>
+    <p style="font-size:13px;color:var(--mut);margin-top:4px">Fotografe o documento. Gere um PDF com várias páginas e classifique no estoque.</p>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" onclick="abrirCamera()">📷 Abrir câmera</button>
+      <button class="btn sec" onclick="$('scan-fallback').click()">🖼️ Galeria</button>
+      <a class="btn sec" href="https://drive.google.com" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">🔗 Abrir Drive</a>
+    </div>
+    <input type="file" id="scan-fallback" accept="image/*" capture="environment" hidden>
+  </div>
+  <div id="scan-paginas"></div>
+  <div class="row" id="scan-acoes" style="display:none;margin-top:12px">
+    <button class="btn" onclick="concluirScan()">✅ Gerar PDF e cadastrar</button>
+    <button class="btn sec" onclick="abrirCamera()">📷 + Página</button>
+    <button class="btn sec" onclick="limparScan()">🗑️ Limpar</button>
+  </div>
+</section>
+
+</main>
+
+<nav>
+  <button class="on" data-s="inicio" onclick="irPara('inicio')"><span>🏠</span>Início</button>
+  <button data-s="docs" onclick="irPara('docs')"><span>📄</span>Documentos</button>
+  <button data-s="scan" onclick="irPara('scan')"><span>📷</span>Escanear</button>
+  <button data-s="enviar" onclick="irPara('enviar')"><span>📤</span>Enviar</button>
+  <button data-s="cad" onclick="irPara('cad')"><span>👥</span>Cadastros</button>
+</nav>
+
+<div class="modal" id="m-doc"><div class="box">
+  <h3 id="tit-doc">➕ Novo documento</h3>
+  <input type="hidden" id="f-id">
+  <label>1. Categoria *</label>
+  <select id="f-cat" onchange="opcoesForm()">
+    <option value="Pessoal">👤 Documentos Pessoais</option>
+    <option value="Empresa">🏢 Documentos da Empresa</option>
+  </select>
+  <label>2. Titular * (dono do documento)</label>
+  <div class="row" style="flex-wrap:nowrap">
+    <select id="f-titular" style="flex:1"></select>
+    <button type="button" class="btn sec" style="flex:none;white-space:nowrap" onclick="toggleQ()">➕ Novo</button>
+  </div>
+  <div id="q-painel">
+    <b id="q-tit">Cadastro rápido</b>
+    <label id="q-lnome">Nome completo *</label><input id="q-nome">
+    <label id="q-ldoc">CPF</label><input id="q-doc" inputmode="numeric">
+    <label>E-mail</label><input id="q-email" type="email">
+    <label>WhatsApp</label><input id="q-wpp" inputmode="tel" placeholder="(92) 99999-9999">
+    <div class="row" style="margin-top:10px">
+      <button type="button" class="btn" onclick="salvarQ()">💾 Cadastrar e usar</button>
+      <button type="button" class="btn sec" onclick="toggleQ(false)">Cancelar</button>
+    </div>
+  </div>
+  <label>3. Nome do documento *</label><input id="f-nome" placeholder="Ex.: CNH do João">
+  <label>Tipo</label><select id="f-tipo"></select>
+  <div class="row" style="flex-wrap:nowrap">
+    <div style="flex:1"><label>Emissão</label><input type="date" id="f-emissao"></div>
+    <div style="flex:1"><label>Validade</label><input type="date" id="f-validade"></div>
+  </div>
+  <label>Observações</label><textarea id="f-obs" rows="2"></textarea>
+  <label>Arquivo (PDF, JPG, PNG, DOC, DOCX)</label>
+  <input type="file" id="f-arq" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,image/*">
+  <small id="f-arqinfo" style="color:var(--mut)"></small>
+  <div class="row" style="margin-top:14px">
+    <button class="btn" onclick="salvarDoc()">💾 Salvar</button>
+    <button class="btn sec" onclick="fechar('m-doc')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal" id="m-ver"><div class="box">
+  <h3 id="ver-tit">Documento</h3>
+  <div id="ver-corpo"></div>
+  <button class="btn sec" style="margin-top:10px" onclick="fechar('m-ver')">Fechar</button>
+</div></div>
+
+<!-- MODAL DE ENVIO MANUAL -->
+<div class="modal" id="m-envio"><div class="box">
+  <h3 id="m-envio-titulo">💬 Enviar Documento</h3>
+  <p style="font-size:13px;color:var(--mut);margin-bottom:12px">
+    O seu celular bloqueou o envio automático. Para não haver erros, siga os passos abaixo:
+  </p>
+
+  <div class="passo">
+    <b>1️⃣ Baixe o arquivo</b>
+    <div class="arquivos" id="m-envio-lista"></div>
+    <button class="btn" style="width:100%" id="m-envio-baixar" onclick="m_envio_baixar()">📥 Baixar arquivo para o celular</button>
+    <div id="m-envio-baixado" style="display:none;font-size:12px;color:#065f46;font-weight:600;margin-top:6px">✅ Salvo na pasta Downloads!</div>
+  </div>
+
+  <div class="passo" style="border-left-color:#22c55e">
+    <b>2️⃣ Anexe manualmente</b>
+    <p style="font-size:13px;color:var(--txt);line-height:1.5;margin-top:4px">
+      Abra o <b>WhatsApp</b> (use o app normal, não o Business) ou o seu <b>E-mail</b>, vá na conversa e toque no <b>clipe 📎</b>. Escolha o arquivo que você acabou de baixar na pasta Downloads.
+    </p>
+  </div>
+
+  <button class="btn sec" style="width:100%;margin-top:14px" onclick="fechar('m-envio')">Fechar</button>
+</div></div>
+
+<div class="modal" id="m-cam" style="z-index:80">
+  <div class="box">
+    <div style="position:relative;height:62vh;background:#000">
+      <video id="cam-video" autoplay playsinline muted></video>
+      <div style="position:absolute;inset:8% 6%;border:2px dashed #5BB4FF;border-radius:12px;pointer-events:none;box-shadow:0 0 0 9999px rgba(10,30,74,.35)"></div>
+      <button onclick="fecharCam()" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,.65);color:#fff;border:0;border-radius:50%;width:42px;height:42px;font-size:20px;cursor:pointer;z-index:2">✖</button>
+    </div>
+    <div style="padding:14px;background:#0A2A66;display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <button class="btn sec" id="cam-flash" onclick="toggleFlash()" style="display:none;font-size:13px">⚡ Flash</button>
+      <button class="btn" onclick="capturar()" style="padding:14px 26px;font-size:16px">📸 Capturar</button>
+      <button class="btn sec" onclick="fecharCam()" style="font-size:13px">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const TIPOS={Pessoal:['RG','CPF','CNH','Comprovante de residência','Currículo','Certificado','Certidão','Outro'],Empresa:['CNPJ','Contrato social','Certidão','Alvará','Nota fiscal','Contrato','Outro']};
+const ICONES={'RG':'🪪','CPF':'🪪','CNH':'🚗','Comprovante de residência':'🏠','Currículo':'📝','Certificado':'🎓','Certidão':'📜','CNPJ':'🏢','Contrato social':'📑','Alvará':'📋','Nota fiscal':'🧾','Contrato':'🤝','Outro':'📄'};
+let DOCS=[],PESSOAS=[],EMPRESAS=[],CAT='Todos',ARQ_PRESET=null,ARQ_ORIGEM=null,URL_ATUAL=null,FILA=[];
+const TELAS_RENDER={};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtData=v=>v?v.split('-').reverse().join('/'):'—';
+const abrir=id=>$(id).classList.add('on');
+const fechar=id=>$(id).classList.remove('on');
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2800);}
+
+let db;
+function abrirDB(){return new Promise((res,rej)=>{
+  const r=indexedDB.open('docbox',1);
+  r.onupgradeneeded=e=>{const d=e.target.result;
+    ['docs','pessoas','empresas','envios'].forEach(n=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:'id',autoIncrement:true});});};
+  r.onsuccess=e=>{db=e.target.result;res();};
+  r.onerror=()=>rej(r.error);
+});}
+function tx(store,mode,fn){return new Promise((res,rej)=>{
+  const t=db.transaction(store,mode),rq=fn(t.objectStore(store));
+  t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error);
+});}
+const dbAll=s=>tx(s,'readonly',o=>o.getAll());
+const dbPut=(s,v)=>tx(s,'readwrite',o=>o.put(v));
+const dbDel=(s,id)=>tx(s,'readwrite',o=>o.delete(id));
+async function recarregar(){
+  [DOCS,PESSOAS,EMPRESAS]=await Promise.all([dbAll('docs'),dbAll('pessoas'),dbAll('empresas')]);
+  renderTudo();
+}
+
+function cpfOk(c){c=c.replace(/\D/g,'');if(c.length!==11||/^(\d)\1+$/.test(c))return false;
+  for(let t=9;t<11;t++){let s=0;for(let i=0;i<t;i++)s+=c[i]*(t+1-i);const d=(s*10%11)%10;if(d!=c[t])return false;}return true;}
+function cnpjOk(c){c=c.replace(/\D/g,'');if(c.length!==14||/^(\d)\1+$/.test(c))return false;
+  for(let t=12;t<14;t++){let s=0,p=t-7;for(let i=0;i<t;i++){s+=c[i]*p--;if(p<2)p=9;}const d=s%11<2?0:11-s%11;if(d!=c[t])return false;}return true;}
+const mCPF=v=>v.replace(/\D/g,'').slice(0,11).replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+const mCNPJ=v=>v.replace(/\D/g,'').slice(0,14).replace(/^(\d{2})(\d)/,'$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1/$2').replace(/(\d{4})(\d)/,'$1-$2');
+function mTel(v){v=v.replace(/\D/g,'').slice(0,11);
+  if(v.length>10)return v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');
+  return v.replace(/(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3').replace(/[-)]$/,'');}
+const emailOk=e=>/^\S+@\S+\.\S+$/.test(e);
+
+function diasPara(v){if(!v)return null;const h=new Date();h.setHours(0,0,0,0);return Math.round((new Date(v+'T00:00:00')-h)/864e5);}
+function statusDoc(d){const n=diasPara(d.validade);
+  if(n===null)return{k:'ok',t:'Sem validade',i:'🟢'};
+  if(n<0)return{k:'bad',t:'Vencido há '+(-n)+' dia(s)',i:'🔴'};
+  if(n===0)return{k:'warn',t:'Vence hoje',i:'🟡'};
+  if(n<=30)return{k:'warn',t:'Vence em '+n+' dia(s)',i:'🟡'};
+  return{k:'ok',t:'Válido',i:'🟢'};}
+function nomeTitular(d){const l=d.cat==='Pessoal'?PESSOAS:EMPRESAS;const t=l.find(x=>x.id===d.titularId);return t?(t.nome||t.razao):'—';}
+
+function irPara(n){
+  const el=$('s-'+n);if(!el)return;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  el.classList.add('on');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.s===n));
+  if(TELAS_RENDER[n])TELAS_RENDER[n]();
+  window.scrollTo(0,0);
+}
+function filtrarStatus(s){$('f-fstatus').value=s;CAT='Todos';$('busca').value='';irPara('docs');}
+function renderTudo(){renderDash();renderDocs();renderCad();renderEnviar();renderHist();}
+
+function renderDash(){
+  const t=DOCS.length,p=DOCS.filter(d=>d.cat==='Pessoal').length,e=t-p;
+  const st=DOCS.map(statusDoc),ok=st.filter(s=>s.k==='ok').length,av=st.filter(s=>s.k==='warn').length,vc=st.filter(s=>s.k==='bad').length;
+  $('kpis').innerHTML=[['',t,'📄 Total'],['',p,'👤 Pessoais'],['',e,'🏢 Da empresa'],['ok',ok,'🟢 Válidos'],['warn',av,'🟡 A vencer (30d)'],['bad',vc,'🔴 Vencidos']]
+    .map(k=>`<div class="kpi ${k[0]}"><b>${k[1]}</b><span>${k[2]}</span></div>`).join('');
+  $('alertas').innerHTML=(vc?`<div class="alerta bad" onclick="filtrarStatus('bad')">⚠️ ${vc} documento(s) vencido(s). Toque para ver.</div>`:'')+
+    (av?`<div class="alerta warn" onclick="filtrarStatus('warn')">🟡 ${av} documento(s) vencem em até 30 dias.</div>`:'');
+  const C=2*Math.PI*40;let svg='<circle cx="50" cy="50" r="40" fill="none" stroke="#dbe7ff" stroke-width="16"/>';
+  if(t){const lp=C*p/t,le=C*e/t;
+    svg+=`<circle cx="50" cy="50" r="40" fill="none" stroke="#1E6FFF" stroke-width="16" stroke-dasharray="${lp} ${C-lp}" transform="rotate(-90 50 50)"/>`;
+    svg+=`<circle cx="50" cy="50" r="40" fill="none" stroke="#5BB4FF" stroke-width="16" stroke-dasharray="${le} ${C-le}" stroke-dashoffset="${-lp}" transform="rotate(-90 50 50)"/>`;}
+  svg+=`<text x="50" y="55" text-anchor="middle" font-size="16" font-weight="700" fill="#0A2A66">${t}</text>`;
+  $('rosca').innerHTML=svg;
+  $('legrosca').innerHTML=`<p>🔵 Pessoais: <b>${p}</b></p><p>🩵 Empresa: <b>${e}</b></p>`;
+  const por={};DOCS.forEach(d=>por[d.tipo]=(por[d.tipo]||0)+1);
+  const top=Object.entries(por).sort((a,b)=>b[1]-a[1]).slice(0,6),mx=top.length?top[0][1]:1;
+  $('barras').innerHTML=top.length?top.map(([k,v])=>`<div style="margin:8px 0"><div style="font-size:13px;display:flex;justify-content:space-between"><span>${ICONES[k]||'📄'} ${esc(k)}</span><b>${v}</b></div><div class="bar" style="width:${Math.max(8,v/mx*100)}%"></div></div>`).join(''):'<div class="vazio">Nenhum documento ainda.</div>';
+  const prox=DOCS.filter(d=>d.validade).sort((a,b)=>a.validade.localeCompare(b.validade)).slice(0,5);
+  $('proximos').innerHTML=prox.length?prox.map(d=>{const s=statusDoc(d);return`<div class="doc" style="margin:8px 0"><div class="ic">${ICONES[d.tipo]||'📄'}</div><div class="inf"><b>${esc(d.nome)}</b><small>${esc(nomeTitular(d))} • ${fmtData(d.validade)}</small></div><span class="badge ${s.k}">${s.i} ${s.t}</span></div>`;}).join(''):'<div class="vazio">Nenhum documento com validade cadastrada.</div>';
+}
+
+function renderDocs(){
+  const cnt={Todos:DOCS.length,Pessoal:DOCS.filter(d=>d.cat==='Pessoal').length,Empresa:DOCS.filter(d=>d.cat==='Empresa').length};
+  document.querySelectorAll('#tabcat .tab').forEach(b=>{b.classList.toggle('on',b.dataset.c===CAT);b.querySelector('i').textContent=cnt[b.dataset.c];});
+  const q=($('busca').value||'').toLowerCase(),ft=$('f-ftipo').value,fs=$('f-fstatus').value;
+  const l=DOCS.filter(d=>(CAT==='Todos'||d.cat===CAT)&&(!ft||d.tipo===ft)&&(!fs||statusDoc(d).k===fs)&&
+    (!q||(d.nome+' '+nomeTitular(d)+' '+d.tipo).toLowerCase().includes(q)))
+    .sort((a,b)=>(a.validade||'9999').localeCompare(b.validade||'9999'));
+  $('listadocs').innerHTML=l.length?l.map(d=>{const s=statusDoc(d);
+    return`<div class="card doc"><div class="ic">${ICONES[d.tipo]||'📄'}</div>
+    <div class="inf"><b>${esc(d.nome)}</b><small>${d.cat==='Pessoal'?'👤':'🏢'} ${esc(nomeTitular(d))} • ${esc(d.tipo)}</small>
+    <small>Validade: ${fmtData(d.validade)}</small><span class="badge ${s.k}">${s.i} ${s.t}</span></div>
+    <div class="acts"><button title="Ver" onclick="verDoc(${d.id})">👁️</button><button title="Editar" onclick="abrirFormDoc(${d.id})">✏️</button><button title="Excluir" onclick="excluirDoc(${d.id})">🗑️</button></div></div>`;}).join('')
+    :'<div class="card vazio">Nenhum documento encontrado.<br>Toque em ➕ Novo documento para adicionar.</div>';
+}
+function opcoesForm(){
+  const cat=$('f-cat').value;
+  $('f-tipo').innerHTML=TIPOS[cat].map(t=>`<option>${t}</option>`).join('');
+  const l=cat==='Pessoal'?PESSOAS:EMPRESAS;
+  $('f-titular').innerHTML=l.length?l.map(x=>`<option value="${x.id}">${esc(x.nome||x.razao)}</option>`).join(''):'<option value="">— cadastre primeiro (toque em ➕ Novo) —</option>';
+  if($('q-painel'))$('q-painel').style.display='none';
+}
+function abrirFormDoc(id,preset){
+  ARQ_PRESET=null;ARQ_ORIGEM=null;
+  const d=id?DOCS.find(x=>x.id===id):null;
+  $('tit-doc').textContent=d?'✏️ Editar documento':'➕ Novo documento';
+  $('f-id').value=d?d.id:'';
+  $('f-cat').value=d?d.cat:((preset&&preset.cat)||'Pessoal');
+  opcoesForm();
+  if(d){$('f-tipo').value=d.tipo;$('f-titular').value=d.titularId;}
+  $('f-nome').value=d?d.nome:((preset&&preset.nome)||'');
+  $('f-emissao').value=d?d.emissao||'':'';
+  $('f-validade').value=d?d.validade||'':'';
+  $('f-obs').value=d?d.obs||'':'';
+  $('f-arq').value='';
+  if(preset&&preset.file){ARQ_PRESET=preset.file;ARQ_ORIGEM=preset.origem||'upload';}
+  $('f-arqinfo').textContent=d?'Arquivo atual: '+d.arqNome+' (escolha outro para substituir)':(ARQ_PRESET?'📎 '+(ARQ_PRESET.name||'arquivo pronto para salvar'):'');
+  abrir('m-doc');
+  const l=$('f-cat').value==='Pessoal'?PESSOAS:EMPRESAS;
+  if(!l.length&&!d)toggleQ(true);
+}
+async function salvarDoc(){
+  const id=$('f-id').value?+$('f-id').value:null,nome=$('f-nome').value.trim(),cat=$('f-cat').value,tit=$('f-titular').value;
+  if(!nome)return toast('Informe o nome do documento');
+  if(!tit)return toast('Selecione o titular (cadastre em Cadastros)');
+  const emissao=$('f-emissao').value,validade=$('f-validade').value;
+  if(emissao&&validade&&validade<emissao)return toast('A validade não pode ser antes da emissão');
+  const ant=id?DOCS.find(d=>d.id===id):null,file=$('f-arq').files[0]||ARQ_PRESET||null;
+  if(!file&&!ant)return toast('Selecione um arquivo');
+  const reg=Object.assign({},ant||{criado:new Date().toISOString(),origem:ARQ_ORIGEM||'upload'},
+    {nome,tipo:$('f-tipo').value,cat,titularId:+tit,emissao,validade,obs:$('f-obs').value.trim()});
+  if(file){reg.arquivo=file;reg.arqNome=file.name||(nome+'.pdf');reg.arqTipo=file.type||'';}
+  try{await dbPut('docs',reg);}catch(e){return toast('Erro ao salvar o documento');}
+  ARQ_PRESET=null;ARQ_ORIGEM=null;fechar('m-doc');await recarregar();toast('Documento salvo ✅');
+  if(FILA.length)proximoDaFila();
+}
+async function excluirDoc(id){
+  const d=DOCS.find(x=>x.id===id);if(!d||!confirm('Excluir "'+d.nome+'"?'))return;
+  await dbDel('docs',id);await recarregar();toast('Documento excluído 🗑️');
+}
+async function excluirVencidos(){
+  const v=DOCS.filter(d=>statusDoc(d).k==='bad');
+  if(!v.length)return toast('Nenhum documento vencido 🎉');
+  if(!confirm('Excluir '+v.length+' documento(s) vencido(s)?'))return;
+  for(const d of v)await dbDel('docs',d.id);
+  await recarregar();toast('Vencidos excluídos 🗑️');
+}
+
+function mimeDe(d){
+  const tipo=d.arqTipo||'';
+  if(tipo&&tipo!=='application/octet-stream'&&tipo!=='text/plain')return tipo;
+  const ext=String(d.arqNome||'').toLowerCase().split('.').pop();
+  const map={'pdf':'application/pdf','jpg':'image/jpeg','jpeg':'image/jpeg','png':'image/png',
+    'doc':'application/msword','docx':'application/vnd.openxmlformats-officedocument.wordprocessingml.document'};
+  return map[ext]||'application/octet-stream';
+}
+
+function verDoc(id){
+  const d=DOCS.find(x=>x.id===id);if(!d||!d.arquivo)return;
+  if(URL_ATUAL)URL.revokeObjectURL(URL_ATUAL);
+  URL_ATUAL=URL.createObjectURL(d.arquivo);const t=mimeDe(d);let h='';
+  if(t.startsWith('image/'))h=`<img src="${URL_ATUAL}" style="width:100%;border-radius:10px">`;
+  else if(t==='application/pdf')h=`<iframe src="${URL_ATUAL}" style="width:100%;height:60vh;border:0;border-radius:10px"></iframe>`;
+  else h='<p class="vazio">Pré-visualização indisponível para este formato.</p>';
+  h+=`<button class="btn" style="width:100%;margin-top:10px" onclick="baixarArquivo(${id})">📥 Baixar arquivo para o celular</button>`;
+  h+=`<a class="btn sec" style="display:block;text-align:center;text-decoration:none;margin-top:8px" href="${URL_ATUAL}" download="${esc(d.arqNome)}">⬇️ Abrir/Compartilhar pelo navegador</a>`;
+  if(d.validade)h+=`<button class="btn sec" style="width:100%;margin-top:8px" onclick="baixarICS([${id}])">📅 Adicionar vencimento à agenda do telefone</button>`;
+  $('ver-corpo').innerHTML=h;$('ver-tit').textContent=d.nome;abrir('m-ver');
+}
+
+async function baixarArquivo(id){
+  const d=DOCS.find(x=>x.id===id);
+  if(!d||!d.arquivo)return toast('Arquivo não encontrado');
+  const r=await salvarArquivo(d.arquivo, d.arqNome, mimeDe(d));
+  if(r.success)toast('✅ Baixado para Downloads');
+  else if(!r.aborted)toast('❌ Não foi possível baixar');
+}
+
+async function salvarArquivo(blob, nome, mime){
+  if(!blob)return {success:false,error:'sem arquivo'};
+  if(window.showSaveFilePicker){
+    try{
+      const handle = await window.showSaveFilePicker({suggestedName: nome});
+      const w = await handle.createWritable();
+      await w.write(blob);
+      await w.close();
+      return {success:true,method:'picker'};
+    }catch(e){
+      if(e.name==='AbortError')return {success:false,aborted:true};
+    }
+  }
+  try{
+    const u = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = u;
+    a.download = nome;
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{a.remove();URL.revokeObjectURL(u);}, 60000);
+    return {success:true,method:'download'};
+  }catch(e){
+    return {success:false,error:e.message};
+  }
+}
+
+function toggleQ(abrirP){
+  const p=$('q-painel'),mostrar=(abrirP===undefined)?p.style.display==='none':abrirP;
+  p.style.display=mostrar?'block':'none';
+  if(!mostrar)return;
+  const emp=$('f-cat').value==='Empresa';
+  $('q-tit').textContent=emp?'🏢 Cadastro rápido de empresa':'👤 Cadastro rápido de pessoa física';
+  $('q-lnome').textContent=emp?'Razão social *':'Nome completo *';
+  $('q-ldoc').textContent=emp?'CNPJ':'CPF';
+  $('q-doc').placeholder=emp?'00.000.000/0000-00':'000.000.000-00';
+  ['q-nome','q-doc','q-email','q-wpp'].forEach(i=>$(i).value='');
+  $('q-nome').focus();
+}
+async function salvarQ(){
+  const emp=$('f-cat').value==='Empresa',nome=$('q-nome').value.trim(),doc=$('q-doc').value,email=$('q-email').value.trim();
+  if(!nome)return toast(emp?'Informe a razão social':'Informe o nome');
+  if(doc&&!(emp?cnpjOk(doc):cpfOk(doc)))return toast(emp?'CNPJ inválido':'CPF inválido');
+  if(email&&!emailOk(email))return toast('E-mail inválido');
+  const r=emp?{razao:nome,cnpj:doc,email,tel:$('q-wpp').value}:{nome,cpf:doc,email,wpp:$('q-wpp').value};
+  try{const id=await dbPut(emp?'empresas':'pessoas',r);
+    const tipo=$('f-tipo').value;
+    await recarregar();opcoesForm();
+    $('f-tipo').value=tipo;$('f-titular').value=id;
+    toast((emp?'Empresa':'Pessoa')+' cadastrada e selecionada ✅');
+  }catch(e){toast('Erro ao cadastrar');}
+}
+
+function renderCad(){
+  $('listaempresas').innerHTML=EMPRESAS.length?EMPRESAS.map(e=>`<div class="doc" style="margin:8px 0"><div class="ic">🏢</div><div class="inf"><b>${esc(e.razao)}</b><small>${esc(e.cnpj||'sem CNPJ')} • ${esc(e.email||'sem e-mail')}</small></div><div class="acts"><button onclick="abrirEmpresa(${e.id})">✏️</button><button onclick="excluirEmpresa(${e.id})">🗑️</button></div></div>`).join(''):'<div class="vazio">Nenhuma empresa cadastrada.</div>';
+  $('listapessoas').innerHTML=PESSOAS.length?PESSOAS.map(p=>`<div class="doc" style="margin:8px 0"><div class="ic">👤</div><div class="inf"><b>${esc(p.nome)}</b><small>${esc(p.cpf||'sem CPF')} • ${esc(p.wpp||'sem WhatsApp')}</small></div><div class="acts"><button onclick="abrirPessoa(${p.id})">✏️</button><button onclick="excluirPessoa(${p.id})">🗑️</button></div></div>`).join(''):'<div class="vazio">Nenhuma pessoa cadastrada.</div>';
+}
+function fecharCad(){$('c-empresa').style.display='none';$('c-pessoa').style.display='none';}
+function mostrarCad(id,foco){
+  $('menucad').classList.remove('on');
+  $('c-empresa').style.display='none';$('c-pessoa').style.display='none';
+  $(id).style.display='block';$(id).scrollIntoView({behavior:'smooth',block:'start'});
+  if(foco&&$(foco))$(foco).focus();
+}
+function abrirPessoa(id){
+  const p=id?PESSOAS.find(x=>x.id===id):null;
+  $('p-id').value=p?p.id:'';$('p-nome').value=p?p.nome:'';$('p-cpf').value=p?p.cpf||'':'';$('p-email').value=p?p.email||'':'';$('p-wpp').value=p?p.wpp||'':'';
+  mostrarCad('c-pessoa','p-nome');
+}
+async function salvarPessoa(){
+  const nome=$('p-nome').value.trim(),cpf=$('p-cpf').value,email=$('p-email').value.trim();
+  if(!nome)return toast('Informe o nome');
+  if(cpf&&!cpfOk(cpf))return toast('CPF inválido');
+  if(email&&!emailOk(email))return toast('E-mail inválido');
+  const r={nome,cpf,email,wpp:$('p-wpp').value};if($('p-id').value)r.id=+$('p-id').value;
+  await dbPut('pessoas',r);fecharCad();await recarregar();toast('Pessoa salva ✅');
+}
+async function excluirPessoa(id){
+  if(DOCS.some(d=>d.cat==='Pessoal'&&d.titularId===id))return toast('Há documentos vinculados a esta pessoa');
+  if(!confirm('Excluir esta pessoa?'))return;
+  await dbDel('pessoas',id);await recarregar();toast('Pessoa excluída 🗑️');
+}
+function abrirEmpresa(id){
+  const e=id?EMPRESAS.find(x=>x.id===id):null;
+  $('e-id').value=e?e.id:'';$('e-razao').value=e?e.razao:'';$('e-cnpj').value=e?e.cnpj||'':'';$('e-email').value=e?e.email||'':'';$('e-tel').value=e?e.tel||'':'';
+  mostrarCad('c-empresa','e-razao');
+}
+async function salvarEmpresa(){
+  const razao=$('e-razao').value.trim(),cnpj=$('e-cnpj').value,email=$('e-email').value.trim();
+  if(!razao)return toast('Informe a razão social');
+  if(cnpj&&!cnpjOk(cnpj))return toast('CNPJ inválido');
+  if(email&&!emailOk(email))return toast('E-mail inválido');
+  const r={razao,cnpj,email,tel:$('e-tel').value};if($('e-id').value)r.id=+$('e-id').value;
+  await dbPut('empresas',r);fecharCad();await recarregar();toast('Empresa salva ✅');
+}
+async function excluirEmpresa(id){
+  if(DOCS.some(d=>d.cat==='Empresa'&&d.titularId===id))return toast('Há documentos vinculados a esta empresa');
+  if(!confirm('Excluir esta empresa?'))return;
+  await dbDel('empresas',id);await recarregar();toast('Empresa excluída 🗑️');
+}
+
+function receberArquivos(files){
+  files=[...files].filter(f=>f.size>0);
+  if(!files.length)return;
+  FILA=files;proximoDaFila();
+}
+function proximoDaFila(){
+  const f=FILA.shift();if(!f)return;
+  abrirFormDoc(null,{file:f,nome:f.name.replace(/\.[^.]+$/,''),origem:'import'});
+  if(FILA.length)$('tit-doc').textContent='📥 Importando (faltam '+FILA.length+' depois deste)';
+}
+async function buscarComputador(){
+  if(window.showOpenFilePicker){
+    try{
+      const hs=await showOpenFilePicker({multiple:true,types:[{description:'Documentos e imagens',accept:{
+        'application/pdf':['.pdf'],'image/*':['.jpg','.jpeg','.png'],
+        'application/msword':['.doc'],
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document':['.docx']}}]});
+      receberArquivos(await Promise.all(hs.map(h=>h.getFile())));return;
+    }catch(e){if(e.name==='AbortError')return;}
+  }
+  $('in-arq').click();
+}
+
+function baixarBlob(blob,nome){
+  const u=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=u;a.download=nome;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),10000);
+}
+
+const icsEsc=s=>String(s).replace(/[\\;,]/g,'\\$&').replace(/\n/g,'\\n');
+function baixarICS(ids){
+  const l=DOCS.filter(d=>d.validade&&(!ids||ids.includes(d.id)));
+  if(!l.length)return toast('Nenhum documento com validade cadastrada');
+  const z=n=>String(n).padStart(2,'0'),stamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  const ev=l.map(d=>{
+    const f=new Date(d.validade+'T00:00:00');f.setDate(f.getDate()+1);
+    return['BEGIN:VEVENT','UID:docbox-'+d.id+'-'+d.validade+'@docbox','DTSTAMP:'+stamp,
+      'DTSTART;VALUE=DATE:'+d.validade.replace(/-/g,''),
+      'DTEND;VALUE=DATE:'+f.getFullYear()+z(f.getMonth()+1)+z(f.getDate()),
+      'SUMMARY:'+icsEsc('📄 Vence: '+d.nome),
+      'DESCRIPTION:'+icsEsc(d.tipo+' • '+nomeTitular(d)),
+      'BEGIN:VALARM','TRIGGER:-P30D','ACTION:DISPLAY','DESCRIPTION:Vence em 30 dias','END:VALARM',
+      'BEGIN:VALARM','TRIGGER:-P7D','ACTION:DISPLAY','DESCRIPTION:Vence em 7 dias','END:VALARM',
+      'END:VEVENT'].join('\r\n');}).join('\r\n');
+  const ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//DocBox//PT\r\nCALSCALE:GREGORIAN\r\n'+ev+'\r\nEND:VCALENDAR';
+  baixarBlob(new Blob([ics],{type:'text/calendar'}),'docbox-vencimentos.ics');
+  toast('Abra o arquivo .ics para adicionar à agenda 📅');
+}
+
+const SEL=new Set(),DEST_KEY='docbox_dest';
+const getDest=()=>{try{return JSON.parse(localStorage.getItem(DEST_KEY)||'[]');}catch(e){return[];}};
+const setDest=l=>{try{localStorage.setItem(DEST_KEY,JSON.stringify(l));}catch(e){}};
+function renderSalvos(){
+  const l=getDest();
+  $('s-salvos').innerHTML='<option value="">⭐ Destinatários salvos ('+l.length+')</option>'+l.map((d,i)=>`<option value="${i}">${esc(d.nome||d.email||d.wpp)}</option>`).join('');
+}
+function usarSalvo(){
+  const v=$('s-salvos').value;if(v==='')return;
+  const d=getDest()[+v];if(!d)return;
+  $('s-nome').value=d.nome||'';$('s-email').value=d.email||'';$('s-wpp').value=d.wpp||'';
+}
+function excluirSalvo(){
+  const v=$('s-salvos').value;if(v==='')return toast('Escolha um destinatário salvo');
+  const l=getDest();l.splice(+v,1);setDest(l);renderSalvos();toast('Destinatário removido');
+}
+function salvarDest(d){
+  if(!d.nome&&!d.email&&!d.wpp)return;
+  const chave=x=>(x.email||x.wpp||x.nome).toLowerCase();
+  const l=getDest().filter(x=>chave(x)!==chave(d));l.unshift(d);setDest(l.slice(0,30));
+}
+async function escolherAgenda(){
+  if(!('contacts' in navigator&&'ContactsManager' in window))
+    return toast('Este navegador não acessa a agenda. Preencha manualmente (Chrome Android).');
+  try{
+    const r=await navigator.contacts.select(['name','email','tel'],{multiple:false});
+    if(!r.length)return;const c=r[0];
+    $('s-nome').value=(c.name||[])[0]||'';$('s-email').value=(c.email||[])[0]||'';
+    let n=((c.tel||[])[0]||'').replace(/\D/g,'');if(n.length>11&&n.startsWith('55'))n=n.slice(2);
+    $('s-wpp').value=mTel(n);
+  }catch(e){toast('Não foi possível abrir a agenda');}
+}
+function toggleSel(id,on){on?SEL.add(id):SEL.delete(id);$('s-cont').textContent=SEL.size+' selecionado(s)';}
+function renderEnviar(){
+  const q=($('s-busca').value||'').toLowerCase();
+  const l=DOCS.filter(d=>!q||(d.nome+' '+nomeTitular(d)+' '+d.tipo).toLowerCase().includes(q));
+  [...SEL].forEach(id=>{if(!DOCS.some(d=>d.id===id))SEL.delete(id);});
+  $('s-lista').innerHTML=l.length?l.map(d=>{const s=statusDoc(d);
+    return`<label class="sel"><input type="checkbox" ${SEL.has(d.id)?'checked':''} onchange="toggleSel(${d.id},this.checked)"><span>${ICONES[d.tipo]||'📄'} <b>${esc(d.nome)}</b><small>${esc(nomeTitular(d))} • ${s.i} ${s.t}</small></span></label>`;}).join('')
+    :'<div class="vazio">Nenhum documento cadastrado.</div>';
+  $('s-cont').textContent=SEL.size+' selecionado(s)';
+}
+
+async function renderHist(){
+  const l=(await dbAll('envios')).sort((a,b)=>b.data.localeCompare(a.data)).slice(0,50);
+  const topo=l.length?`<div class="row" style="justify-content:flex-end;margin-bottom:8px"><button class="btn red" style="font-size:12px;padding:7px 12px" onclick="limparHistorico()">🗑️ Limpar histórico</button></div>`:'';
+  $('s-hist').innerHTML=topo+(l.length?l.map(h=>`<div class="hist"><button class="del" title="Excluir este registro" onclick="excluirEnvio(${h.id})">🗑️</button>${h.canal==='wpp'?'💬':'📧'} <b>${esc(h.dest||'—')}</b> • ${new Date(h.data).toLocaleString('pt-BR')}<br><small style="color:var(--mut)">${esc(h.docs.join(', '))}</small></div>`).join(''):'<div class="vazio">Nenhum envio registrado.</div>');
+}
+async function excluirEnvio(id){
+  if(!confirm('Excluir este registro do histórico?'))return;
+  try{await dbDel('envios',id);renderHist();toast('Registro excluído 🗑️');}
+  catch(e){toast('Erro ao excluir');}
+}
+async function limparHistorico(){
+  const l=await dbAll('envios');
+  if(!l.length)return toast('Histórico já está vazio');
+  if(!confirm('Limpar TODO o histórico de envios ('+l.length+' registros)?'))return;
+  for(const h of l)await dbDel('envios',h.id);
+  renderHist();toast('Histórico limpo 🗑️');
+}
+
+const docsSel=()=>DOCS.filter(d=>SEL.has(d.id));
+async function registrarEnvio(sel,dest,canal,modo){
+  try{await dbPut('envios',{data:new Date().toISOString(),docs:sel.map(d=>d.nome),dest:dest.nome||dest.email||dest.wpp,canal,modo});}catch(e){}
+  salvarDest(dest);renderSalvos();renderHist();
+}
+function baixarSelecionados(){
+  const sel=docsSel();if(!sel.length)return toast('Selecione ao menos um documento');
+  sel.forEach((d,i)=>setTimeout(()=>baixarBlob(d.arquivo,d.arqNome),i*500));
+  toast('Baixando '+sel.length+' arquivo(s) ⬇️');
+}
+
+let _envioCtx=null;
+
+async function enviar(canal){
+  const sel=docsSel();
+  if(!sel.length)return toast('Selecione ao menos um documento');
+
+  const dest={
+    nome:$('s-nome').value.trim(),
+    email:$('s-email').value.trim(),
+    wpp:$('s-wpp').value.trim()
+  };
+  const msg=$('s-msg').value.trim();
+  const wd=dest.wpp.replace(/\D/g,'');
+  const lista=sel.map(d=>'• '+d.nome).join('\n');
+  const texto=msg+'\n\nDocumentos:\n'+lista;
+
+  if(canal==='email'&&!emailOk(dest.email))return toast('Informe um e-mail válido');
+  if(canal==='wpp'&&wd.length<10)return toast('Informe o WhatsApp com DDD');
+
+  for(const d of sel){
+    if(!d.arquivo)return toast('Arquivo do documento "'+d.nome+'" não encontrado. Reimporte-o.');
+  }
+
+  // Cria os arquivos garantindo o MIME correto
+  const files=sel.map(d=>new File([d.arquivo],d.arqNome,{type:mimeDe(d)}));
+
+  // Tenta a API de compartilhamento nativa
+  if(navigator.canShare && navigator.share){
+    try{
+      // Para WhatsApp: enviamos APENAS o arquivo (sem text, sem title). 
+      // Isso força o Android a focar no arquivo. O texto ele buga.
+      const shareData = canal === 'wpp' 
+        ? { files: files } 
+        : { files: files, title: 'Documentos', text: texto };
+
+      if(navigator.canShare(shareData)){
+        await navigator.share(shareData);
+        await registrarEnvio(sel,dest,canal,'nativo');
+        return toast('Arquivo compartilhado ✅');
+      }
+    }catch(e){
+      if(e.name==='AbortError') return; // Usuário cancelou a tela
+      console.warn('Share falhou, caindo no manual.', e);
+    }
+  }
+
+  // Se chegou aqui, a API nativa falhou ou não existe.
+  // Abre o modal APENAS para baixar o arquivo. Sem botão de abrir link.
+  _envioCtx={canal,dest,texto,sel};
+  $('m-envio-titulo').textContent=canal==='wpp'?'💬 Enviar por WhatsApp':'📧 Enviar por E-mail';
+  $('m-envio-lista').innerHTML=sel.map(d=>
+    `📄 <b>${esc(d.arqNome)}</b> <small>(${((d.arquivo.size||0)/1024).toFixed(0)} KB)</small>`
+  ).join('<br>');
+  $('m-envio-baixar').textContent='📥 Baixar '+(sel.length>1?sel.length+' arquivos':'arquivo');
+  $('m-envio-baixado').style.display='none';
+  abrir('m-envio');
+}
+
+async function m_envio_baixar(){
+  if(!_envioCtx)return;
+  const {sel}=_envioCtx;
+  const btn=$('m-envio-baixar');
+  btn.disabled=true;btn.textContent='⏳ Baixando...';
+  let ok=0,erros=0;
+  for(let i=0;i<sel.length;i++){
+    const d=sel[i];
+    const r=await salvarArquivo(d.arquivo, d.arqNome, mimeDe(d));
+    if(r.success)ok++;
+    else if(!r.aborted)erros++;
+    if(i<sel.length-1)await new Promise(r=>setTimeout(r,400));
+  }
+  btn.disabled=false;
+  btn.textContent=ok>0?'✅ Baixado ('+ok+')':'📥 Tentar novamente';
+  if(ok>0){
+    $('m-envio-baixado').style.display='block';
+    $('m-envio-baixado').textContent='✅ '+ok+' arquivo(s) salvo(s) em Downloads'+(erros?' • '+erros+' com erro':'');
+    toast('Arquivo(s) baixado(s)');
+    // Registra no histórico já que foi baixado com sucesso
+    await registrarEnvio(sel, _envioCtx.dest, _envioCtx.canal, 'download');
+  }else if(erros>0){
+    toast('Não foi possível baixar. Use o botão "Abrir/Compartilhar pelo navegador" no documento.');
+  }
+}
+
+let CAM_STREAM=null,CAM_TRACK=null,SCAN_PAGINAS=[];
+async function abrirCamera(){
+  if(!navigator.mediaDevices?.getUserMedia){toast('Câmera não disponível. Use a galeria.');$('scan-fallback').click();return;}
+  try{
+    CAM_STREAM=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});
+    CAM_TRACK=CAM_STREAM.getVideoTracks()[0];
+    $('cam-video').srcObject=CAM_STREAM;
+    const caps=CAM_TRACK.getCapabilities?.()||{};
+    $('cam-flash').style.display=caps.torch?'inline-block':'none';
+    abrir('m-cam');
+  }catch(e){toast('Não foi possível abrir a câmera. Use a galeria.');$('scan-fallback').click();}
+}
+function fecharCam(){
+  if(CAM_STREAM){CAM_STREAM.getTracks().forEach(t=>t.stop());CAM_STREAM=null;}
+  CAM_TRACK=null;$('cam-video').srcObject=null;fechar('m-cam');
+}
+async function toggleFlash(){
+  if(!CAM_TRACK)return;
+  try{const cur=!!CAM_TRACK.getSettings?.().torch;await CAM_TRACK.applyConstraints({advanced:[{torch:!cur}]});}
+  catch(e){toast('Flash não disponível');}
+}
+function capturar(){
+  const v=$('cam-video');if(!v.videoWidth)return toast('Aguarde a câmera carregar');
+  const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  c.toBlob(blob=>{if(!blob)return toast('Falha na captura');adicionarPagina(blob);fecharCam();toast('Página adicionada ✅');},'image/jpeg',0.9);
+}
+function adicionarPagina(blob){
+  const id=Date.now()+'-'+Math.random().toString(36).slice(2,7);
+  SCAN_PAGINAS.push({id,blob,rot:0,filtro:'original'});
+  renderScan();
+}
+function renderScan(){
+  const div=$('scan-paginas');
+  if(!SCAN_PAGINAS.length){div.innerHTML='';$('scan-acoes').style.display='none';return;}
+  $('scan-acoes').style.display='flex';
+  div.innerHTML=`<div class="card"><h3>📄 Páginas (${SCAN_PAGINAS.length})</h3>
+    ${SCAN_PAGINAS.map((p,i)=>`
+      <div class="scan-thumb">
+        <img src="${URL.createObjectURL(p.blob)}">
+        <div style="flex:1;min-width:0">
+          <b style="font-size:13px">Página ${i+1}</b>
+          <div class="filter-row">
+            ${[['original','Original'],['doc','Documento'],['cinza','Cinza'],['colorido','Colorido']].map(f=>`<button class="${p.filtro===f[0]?'on':''}" onclick="setFiltro('${p.id}','${f[0]}')">${f[1]}</button>`).join('')}
+          </div>
+        </div>
+        <div class="acts">
+          <button onclick="moverPagina('${p.id}',-1)" ${i===0?'disabled':''}>⬆️</button>
+          <button onclick="moverPagina('${p.id}',1)" ${i===SCAN_PAGINAS.length-1?'disabled':''}>⬇️</button>
+          <button onclick="girar('${p.id}')">🔄</button>
+          <button onclick="removerPagina('${p.id}')">🗑️</button>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+function setFiltro(id,f){const p=SCAN_PAGINAS.find(x=>x.id===id);if(p){p.filtro=f;renderScan();}}
+function girar(id){const p=SCAN_PAGINAS.find(x=>x.id===id);if(p){p.rot=(p.rot+90)%360;renderScan();}}
+function removerPagina(id){SCAN_PAGINAS=SCAN_PAGINAS.filter(x=>x.id!==id);renderScan();}
+function moverPagina(id,dir){
+  const i=SCAN_PAGINAS.findIndex(x=>x.id===id),j=i+dir;
+  if(i<0||j<0||j>=SCAN_PAGINAS.length)return;
+  [SCAN_PAGINAS[i],SCAN_PAGINAS[j]]=[SCAN_PAGINAS[j],SCAN_PAGINAS[i]];renderScan();
+}
+function limparScan(){SCAN_PAGINAS=[];renderScan();toast('Páginas limpas');}
+function aplicarFiltro(ctx,w,h,filtro){
+  if(filtro==='original')return;
+  const img=ctx.getImageData(0,0,w,h),d=img.data;
+  for(let i=0;i<d.length;i+=4){
+    let r=d[i],g=d[i+1],b=d[i+2];
+    if(filtro==='cinza'){const v=0.299*r+0.587*g+0.114*b;r=g=b=v;}
+    else if(filtro==='doc'){const v=0.299*r+0.587*g+0.114*b;const t=v>140?255:Math.max(0,Math.min(255,(v-30)*1.4));r=g=b=t;}
+    else if(filtro==='colorido'){r=(r-128)*1.25+128;g=(g-128)*1.25+128;b=(b-128)*1.25+128;}
+    d[i]=Math.max(0,Math.min(255,r));d[i+1]=Math.max(0,Math.min(255,g));d[i+2]=Math.max(0,Math.min(255,b));
+  }
+  ctx.putImageData(img,0,0);
+}
+async function processarPaginas(paginas){
+  const out=[];
+  for(const p of paginas){
+    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(p.blob);});
+    const rot=p.rot||0,swap=(rot/90)%2===1;
+    const outW=swap?img.height:img.width,outH=swap?img.width:img.height;
+    const sc=Math.min(1,1600/Math.max(outW,outH));
+    const cv=document.createElement('canvas');
+    cv.width=Math.round(outW*sc);cv.height=Math.round(outH*sc);
+    const ctx=cv.getContext('2d');
+    ctx.scale(sc,sc);ctx.translate(outW/2,outH/2);ctx.rotate(rot*Math.PI/180);
+    ctx.drawImage(img,-img.width/2,-img.height/2);
+    aplicarFiltro(ctx,cv.width,cv.height,p.filtro);
+    const jpegBlob=await new Promise(res=>cv.toBlob(res,'image/jpeg',0.82));
+    out.push({jpegBytes:new Uint8Array(await jpegBlob.arrayBuffer()),width:cv.width,height:cv.height});
+    URL.revokeObjectURL(img.src);
+  }
+  return out;
+}
+function montarPDF(pages){
+  const enc=new TextEncoder(),chunks=[],objOff={};let offset=0;
+  const push=d=>{const b=typeof d==='string'?enc.encode(d):d;chunks.push(b);offset+=b.length;};
+  push('%PDF-1.4\n%\xFF\xFF\xFF\xFF\n');
+  let N=1;const catalogN=N++,pagesN=N++;const pageRefs=[];
+  for(const p of pages){
+    const imgN=N++,contN=N++,pageN=N++;pageRefs.push(pageN);
+    objOff[imgN]=offset;
+    push(`${imgN} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${p.width} /Height ${p.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpegBytes.length} >>\nstream\n`);
+    push(p.jpegBytes);push('\nendstream\nendobj\n');
+    const PW=595,PH=842;const s=Math.min(PW/p.width,PH/p.height);
+    const dw=p.width*s,dh=p.height*s;const dx=(PW-dw)/2,dy=(PH-dh)/2;
+    const content=`q\n${dw.toFixed(2)} 0 0 ${dh.toFixed(2)} ${dx.toFixed(2)} ${dy.toFixed(2)} cm\n/Im${imgN} Do\nQ\n`;
+    objOff[contN]=offset;
+    push(`${contN} 0 obj\n<< /Length ${enc.encode(content).length} >>\nstream\n${content}endstream\nendobj\n`);
+    objOff[pageN]=offset;
+    push(`${pageN} 0 obj\n<< /Type /Page /Parent ${pagesN} 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im${imgN} ${imgN} 0 R >> >> /Contents ${contN} 0 R >>\nendobj\n`);
+  }
+  objOff[pagesN]=offset;
+  push(`${pagesN} 0 obj\n<< /Type /Pages /Kids [${pageRefs.map(n=>n+' 0 R').join(' ')}] /Count ${pageRefs.length} >>\nendobj\n`);
+  objOff[catalogN]=offset;
+  push(`${catalogN} 0 obj\n<< /Type /Catalog /Pages ${pagesN} 0 R >>\nendobj\n`);
+  const xref=offset;
+  push(`xref\n0 ${N}\n0000000000 65535 f \n`);
+  for(let i=1;i<N;i++)push(String(objOff[i]).padStart(10,'0')+' 00000 n \n');
+  push(`trailer\n<< /Size ${N} /Root ${catalogN} 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(chunks,{type:'application/pdf'});
+}
+async function concluirScan(){
+  if(!SCAN_PAGINAS.length)return toast('Nenhuma página escaneada');
+  toast('Gerando PDF...');
+  try{
+    const proc=await processarPaginas(SCAN_PAGINAS);
+    const pdf=montarPDF(proc);
+    const nome='Escaneado '+new Date().toLocaleDateString('pt-BR');
+    const file=new File([pdf],nome.replace(/[^\w]+/g,'-')+'.pdf',{type:'application/pdf'});
+    abrirFormDoc(null,{file,nome,origem:'scan'});
+    limparScan();irPara('docs');toast('PDF pronto! Classifique e salve.');
+  }catch(e){console.error(e);toast('Falha ao gerar PDF. Tente novamente.');}
+}
+
+async function exportarBackup(){
+  try{
+    toast('Preparando backup...');
+    const [docs,pessoas,empresas,envios]=await Promise.all([dbAll('docs'),dbAll('pessoas'),dbAll('empresas'),dbAll('envios')]);
+    const docsOut=[];
+    for(const d of docs){
+      const o=Object.assign({},d);
+      if(d.arquivo){const b=new Uint8Array(await d.arquivo.arrayBuffer());
+        let s='';const chunk=0x8000;for(let i=0;i<b.length;i+=chunk)s+=String.fromCharCode.apply(null,b.subarray(i,i+chunk));
+        o.arquivoB64=btoa(s);delete o.arquivo;}
+      docsOut.push(o);
+    }
+    const json=JSON.stringify({versao:1,data:new Date().toISOString(),docs:docsOut,pessoas,empresas,envios});
+    baixarBlob(new Blob([json],{type:'application/json'}),'docbox-backup-'+new Date().toISOString().slice(0,10)+'.json');
+    toast('Backup exportado ✅');
+  }catch(e){console.error(e);toast('Erro ao exportar backup');}
+}
+function importarBackup(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json';
+  inp.onchange=async e=>{
+    const f=e.target.files[0];if(!f)return;
+    if(!confirm('Importar backup? Isso substitui todos os dados atuais.'))return;
+    try{
+      const j=JSON.parse(await f.text());
+      for(const n of ['docs','pessoas','empresas','envios']){const all=await dbAll(n);for(const x of all)await dbDel(n,x.id);}
+      for(const p of j.pessoas||[])await dbPut('pessoas',p);
+      for(const e2 of j.empresas||[])await dbPut('empresas',e2);
+      for(const v of j.envios||[])await dbPut('envios',v);
+      for(const d of j.docs||[]){
+        const o=Object.assign({},d);
+        if(d.arquivoB64){const bin=atob(d.arquivoB64);const u=new Uint8Array(bin.length);
+          for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+          o.arquivo=new Blob([u],{type:d.arqTipo||'application/octet-stream'});}
+        delete o.arquivoB64;await dbPut('docs',o);
+      }
+      await recarregar();toast('Backup importado ✅');
+    }catch(e){console.error(e);toast('Arquivo de backup inválido');}
+  };
+  inp.click();
+}
+
+async function iniciar(){
+  try{await abrirDB();}catch(e){toast('Não foi possível abrir o banco de dados');return;}
+  const tipos=[...new Set([...TIPOS.Pessoal,...TIPOS.Empresa])];
+  $('f-ftipo').innerHTML='<option value="">Todos os tipos</option>'+tipos.map(t=>`<option>${t}</option>`).join('');
+
+  $('p-cpf').oninput=e=>e.target.value=mCPF(e.target.value);
+  $('p-wpp').oninput=e=>e.target.value=mTel(e.target.value);
+  $('e-cnpj').oninput=e=>e.target.value=mCNPJ(e.target.value);
+  $('e-tel').oninput=e=>e.target.value=mTel(e.target.value);
+  $('s-wpp').oninput=e=>e.target.value=mTel(e.target.value);
+  $('q-doc').oninput=e=>{const emp=$('f-cat').value==='Empresa';e.target.value=(emp?mCNPJ:mCPF)(e.target.value);};
+  $('q-wpp').oninput=e=>e.target.value=mTel(e.target.value);
+
+  document.querySelectorAll('#tabcat .tab').forEach(b=>b.onclick=()=>{CAT=b.dataset.c;renderDocs();});
+
+  document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{
+    if(e.target===m){if(m.id==='m-cam')fecharCam();else m.classList.remove('on');}
+  }));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+      const cam=$('m-cam');if(cam.classList.contains('on')){fecharCam();return;}
+      document.querySelectorAll('.modal.on').forEach(m=>m.classList.remove('on'));
+    }
+  });
+  document.addEventListener('click',e=>{const m=$('menucad');if(m&&!m.contains(e.target))m.classList.remove('on');});
+
+  const dz=$('dropzone');
+  ['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('on');}));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('on');}));
+  dz.addEventListener('drop',e=>receberArquivos(e.dataTransfer.files));
+  $('in-arq').onchange=e=>{receberArquivos(e.target.files);e.target.value='';};
+  $('in-gal').onchange=e=>{receberArquivos(e.target.files);e.target.value='';};
+  $('scan-fallback').onchange=e=>{const f=e.target.files[0];if(f)adicionarPagina(f);e.target.value='';};
+
+  const bk=document.createElement('div');bk.className='card';
+  bk.innerHTML=`<h3>💾 Backup</h3>
+    <p style="font-size:12px;color:var(--mut);margin-bottom:8px">Os dados ficam apenas neste navegador/dispositivo. Faça backup regularmente.</p>
+    <div class="row">
+      <button class="btn sec" onclick="exportarBackup()">⬇️ Exportar backup</button>
+      <button class="btn sec" onclick="importarBackup()">⬆️ Importar backup</button>
+    </div>`;
+  $('s-inicio').appendChild(bk);
+
+  await recarregar();
+}
+iniciar();
+</script>
+</body>
+</html>
